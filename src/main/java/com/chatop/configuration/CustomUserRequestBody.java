@@ -3,7 +3,7 @@ package com.chatop.configuration;
 /**
  * used to store body authentication and registring request 
  */
-public class CustomRequestBody {
+public class CustomUserRequestBody {
 
 	public String email;
 	public String name;

@@ -20,7 +20,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatop.configuration.CustomRequestBody;
+import com.chatop.configuration.CustomUserRequestBody;
+import com.chatop.exceptions.MyDbException;
+import com.chatop.exceptions.MyWebInfoException;
+import com.chatop.exceptions.MyWebNullException;
 import com.chatop.model.MyDbUser;
 import com.chatop.services.JWTService;
 import com.chatop.services.UserService;
@@ -93,25 +96,32 @@ public class UserController {
      * @return registered if OK or empty if not
      */
     @PostMapping("/api/auth/register")
-    public String postNewUser(@RequestBody CustomRequestBody requestBody) {
-    	//error 400 if no token or 200 if ok
-    	
+    public String postNewUser(@RequestBody CustomUserRequestBody requestBody) {
+    	    	
     	log.info("CustomRequestBody = " + requestBody.toString() + ")");
     	BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10, new SecureRandom());
+    	String shaSalted = bCryptPasswordEncoder.encode( requestBody.getPassword());
     	
-    	//no field check here
-    	//create the user in DB
-    	try {
-    		MyDbUser myDbUser = userService.saveUser( requestBody.getEmail(), requestBody.getName(), bCryptPasswordEncoder.encode( requestBody.getPassword()) ) ;
-    		log.info("myDbUser just created = " + myDbUser.toJson());
-    	} catch (Exception e) {
-    		log.error("postNewUser : " + e.toString());
-    	}
+    	MyDbUser myDbUser = null;
     	
-    	//user authentification 
+    	//null Checking
+		if ((requestBody.getEmail()==null) || (requestBody.getName()==null) || (requestBody.getPassword()==null)) {
+			throw new MyWebNullException("Null is not permitted to save a user");
+		} else {
+			//size checking  
+			if ((requestBody.getEmail().length()<3) || (requestBody.getName().length()<3) || (requestBody.getPassword().length()<3)) {
+				throw new MyWebInfoException("field length <3 is not permitted to save a user");
+			} else {
+				myDbUser = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted );
+    	   		log.info("myDbUser just created = " + myDbUser.toJson());
+			}
+		}
+		
+		//user is created, if not : an exception was thrown
+    	//user authentication 
     	final List<SimpleGrantedAuthority> grantedAuths = new ArrayList<>(); //empty list
-        final UserDetails principal = new User(requestBody.getEmail(), bCryptPasswordEncoder.encode( requestBody.getPassword()), grantedAuths);
-        UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(principal, bCryptPasswordEncoder.encode( requestBody.getPassword()), grantedAuths);
+        final UserDetails principal = new User(requestBody.getEmail(), shaSalted, grantedAuths);
+        UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(principal, shaSalted, grantedAuths);
         SecurityContextHolder.getContext().setAuthentication(userToken); //authenticate the user 
         
         //token creation

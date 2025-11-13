@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -62,7 +63,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 		} else {
 			
 			String bodyData=null;							//request body data contains JSON 
-			CustomRequestBody requestBody = null;			//body data parsed in a custom object
+			CustomUserRequestBody requestBody = null;			//body data parsed in a custom object
 			MyDbUser user_db = null;								//the DB user found (or not) in the dataBase
 			UsernamePasswordAuthenticationToken userToken = null;  //the authenticated user found
 			
@@ -77,7 +78,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 			if ((bodyData!=null) && (bodyData.length()>0)) { 
 	        	
 	        	//transform JSON data in a CustomRequestBody class
-	        	requestBody = new Gson().fromJson(bodyData, CustomRequestBody.class);//JSON parsing
+	        	requestBody = new Gson().fromJson(bodyData, CustomUserRequestBody.class);//JSON parsing
 	        	
 	        	log.info("requestBody=" + requestBody.toString());
 	        	log.info("Authentification en cours... : ");//+ this.passwordEncoder().encode(requestBody.getPassword()));
@@ -96,7 +97,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 	        			userToken = authenticateAgainstThirdPartyAndGetAuthentication(requestBody.getEmail(), this.passwordEncoder().encode(requestBody.getPassword()));
 	    			} else {
 	    				log.debug("External system authentication failed");
-	    				throw new BadCredentialsException("External system authentication failed");
+	    				throw new AuthorizationDeniedException("External system authentication failed");
 	    			}
 	        	}
 

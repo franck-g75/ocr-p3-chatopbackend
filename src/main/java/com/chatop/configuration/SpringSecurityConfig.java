@@ -36,7 +36,10 @@ public class SpringSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session sans états
             .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub ?
 					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			//protege des popups
-					.accessDeniedHandler(new BearerTokenAccessDeniedHandler()))						//protege des popups
+					.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+					)		
+            		
+            //protege des popups
             .build();
     }
 	
