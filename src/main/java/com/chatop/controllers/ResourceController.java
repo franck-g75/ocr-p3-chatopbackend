@@ -1,13 +1,39 @@
 package com.chatop.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.chatop.model.Rental;
+import com.chatop.repositories.RentalRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class ResourceController {
 
-	@GetMapping("/api/rentals")//avec angular
+	Logger log = LoggerFactory.getLogger(ResourceController.class);
+	
+	@Autowired
+	RentalRepository rentalRepo;
+	
+	@GetMapping("/api/rentals")
 	public String getRentals() {
+		
+		String retour ="";
+		
+		Rental[] allRentals = rentalRepo.findAll().toArray(new Rental[0]);
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			retour = objectMapper.writeValueAsString(allRentals);
+		} catch (JsonProcessingException e) {
+			log.error("JsonProcessingException");
+		}
+		return "{\"rentals\":".concat(retour).concat("}");
+		
+		/*
 		return "{ \r\n"
 				+ "  \"rentals\": [\r\n"
 				+ "  {\r\n"
@@ -45,5 +71,6 @@ public class ResourceController {
 				+ "  \r\n"
 				+ "  ]\r\n"
 				+ "}";
+				*/
 	}
 }

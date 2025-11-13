@@ -1,8 +1,12 @@
 package com.chatop.configuration;
 
+/**
+ * used to store body authentication and registring request 
+ */
 public class CustomRequestBody {
 
 	public String email;
+	public String name;
 	public String password;
 	
 	public String getEmail() {
@@ -11,6 +15,7 @@ public class CustomRequestBody {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+	
 	public String getPassword() {
 		return password;
 	}
@@ -18,8 +23,15 @@ public class CustomRequestBody {
 		this.password = password;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	public String toString() {
-		return "CustomRequestBody [email=" + email + " password=[disabled]";
+		return "CustomRequestBody [email=" + email + ", name=" + name + ", password=[disabled]]";
 	}
 	
 }

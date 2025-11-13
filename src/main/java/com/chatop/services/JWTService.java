@@ -45,10 +45,10 @@ public class JWTService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                    .issuer("self")
                    .issuedAt(now)
-                   .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                   .expiresAt(now.plus(10, ChronoUnit.MINUTES))
                    .subject(authentication.getName())
                    .build();
-        log.info("Token généré à " + now.toString());
+        log.info("Token generated at " + now.toString());
         return this.jwtEncoder().encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 

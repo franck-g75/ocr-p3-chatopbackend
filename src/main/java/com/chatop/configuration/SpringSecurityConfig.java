@@ -27,16 +27,16 @@ public class SpringSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		
         return http
-    	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   //monFiltre anonyme CustomAuthenticationFilter pour la premiere connexion
-        	.authorizeHttpRequests((authorize) -> authorize			//toutes les requetes doivent etre authentifiées
-				.anyRequest().authenticated()						//soit par httpBasic soit par oauth2ResourceServer
-			)
-        	.csrf((csrf) -> csrf.ignoringRequestMatchers("/api/auth/login")) //site non protégé sur CSRF uniquement sur cet endpoint
-            .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))	// filtre token OAuth2
+        	.csrf((csrf) -> csrf.ignoringRequestMatchers("/api/auth/login","/api/auth/register")) 	//site non protégé sur CSRF uniquement sur cet endpoint
+    	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   						//monFiltre anonyme CustomAuthenticationFilter pour la premiere connexion
+    	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				// filtre token OAuth2
+         	.authorizeHttpRequests(   (authorize) -> authorize										//toutes les end point doivent etre sécurisés sauf register
+				.requestMatchers("/api/auth/login","/api/auth/me", "/api/user/{id}", "/api/rentals").authenticated()
+				.requestMatchers("/api/auth/register").permitAll()   )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session sans états
-            .exceptionHandling((exceptions) -> exceptions									//protege des popups //trouvé sur gitHub
-					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())	//protege des popups
-					.accessDeniedHandler(new BearerTokenAccessDeniedHandler()))				//protege des popups
+            .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub ?
+					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			//protege des popups
+					.accessDeniedHandler(new BearerTokenAccessDeniedHandler()))						//protege des popups
             .build();
     }
 	
