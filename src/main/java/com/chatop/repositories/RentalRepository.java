@@ -11,5 +11,6 @@ import com.chatop.model.Rental;
 public interface RentalRepository extends JpaRepository<Rental,Integer> {
 	
 	public List<Rental> findAll();
+	public Rental getById(Integer id);
 	
 }

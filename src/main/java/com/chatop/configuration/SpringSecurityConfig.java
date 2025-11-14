@@ -31,15 +31,13 @@ public class SpringSecurityConfig {
     	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   						//monFiltre anonyme CustomAuthenticationFilter pour la premiere connexion
     	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				// filtre token OAuth2
          	.authorizeHttpRequests(   (authorize) -> authorize										//toutes les end point doivent etre sécurisés sauf register
-				.requestMatchers("/api/auth/login","/api/auth/me", "/api/user/{id}", "/api/rentals").authenticated()
+				.requestMatchers("/api/auth/login","/api/auth/me", "/api/user/{id}", "/api/rentals", "/api/rentals/**").authenticated()
 				.requestMatchers("/api/auth/register").permitAll()   )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session sans états
-            .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub ?
+            .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub https://github.com/spring-projects/spring-security-samples
 					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			//protege des popups
 					.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-					)		
-            		
-            //protege des popups
+					)
             .build();
     }
 	

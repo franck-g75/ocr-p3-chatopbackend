@@ -3,12 +3,14 @@ package com.chatop.configuration;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.BasicJsonParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,6 +27,7 @@ import com.chatop.controllers.UserController;
 import com.chatop.repositories.UserRepository;
 import com.nimbusds.jose.shaded.gson.Gson;
 import com.chatop.model.MyDbUser;
+import com.chatop.model.dto.UserDto;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -63,7 +66,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 		} else {
 			
 			String bodyData=null;							//request body data contains JSON 
-			CustomUserRequestBody requestBody = null;			//body data parsed in a custom object
+			String userLogin = "";							//the login in the request
+			String userPwd = "";							//the password in the request
 			MyDbUser user_db = null;								//the DB user found (or not) in the dataBase
 			UsernamePasswordAuthenticationToken userToken = null;  //the authenticated user found
 			
@@ -77,24 +81,32 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 			
 			if ((bodyData!=null) && (bodyData.length()>0)) { 
 	        	
-	        	//transform JSON data in a CustomRequestBody class
-	        	requestBody = new Gson().fromJson(bodyData, CustomUserRequestBody.class);//JSON parsing
-	        	
-	        	log.info("requestBody=" + requestBody.toString());
+	        	//transform JSON data in 2 strings
+	        	BasicJsonParser parser = new BasicJsonParser();
+    			try {
+    	            Map<String, Object> result = parser.parseMap(bodyData);
+    	            userLogin = (String) result.get("email");
+    	            userPwd = (String) result.get("password");
+    	        } catch (Exception e) {
+    	            throw new AuthenticationCredentialsNotFoundException(e.getMessage());
+    	        }
+	        			
+	        	log.info("login = " + userLogin);
 	        	log.info("Authentification en cours... : ");//+ this.passwordEncoder().encode(requestBody.getPassword()));
 	        	
 	        	//find the user by his email in the database
-	        	user_db= this.userRepo.findByEmail(requestBody.getEmail());
+	        	
+	        	user_db= this.userRepo.findByEmail(userLogin);
 	        	
 	        	if (Objects.isNull(user_db)) {
 	        		log.debug("User not found in DB");
 	        		throw new AuthenticationCredentialsNotFoundException("User not found in DB");
 	        	} else {
-	        		if (user_db.getEmail().equals(requestBody.getEmail()) && 
+	        		if (user_db.getEmail().equals(userLogin) && 
 	        			//user.getPassword().equals(this.passwordEncoder().encode(requestBody.getPassword())) &&
-	        			passwordEncoder().matches( requestBody.getPassword() , user_db.getPassword() )
+	        			passwordEncoder().matches( userPwd , user_db.getPassword() )
 	        		) {
-	        			userToken = authenticateAgainstThirdPartyAndGetAuthentication(requestBody.getEmail(), this.passwordEncoder().encode(requestBody.getPassword()));
+	        			userToken = authenticateAgainstThirdPartyAndGetAuthentication(userLogin, this.passwordEncoder().encode(userPwd));
 	    			} else {
 	    				log.debug("External system authentication failed");
 	    				throw new AuthorizationDeniedException("External system authentication failed");

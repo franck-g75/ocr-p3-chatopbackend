@@ -1,22 +1,10 @@
-package com.chatop.model;
+package com.chatop.model.dto;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
-import com.chatop.model.dto.RentalDto;
+public class RentalDto {
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity @Table(name="rentals")
-public class Rental {
-	
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 	
 	private String name;
@@ -34,7 +22,8 @@ public class Rental {
 	private Timestamp created_at;
 	
 	private Timestamp updated_at;
-
+	
+	
 	
 	
 	public Integer getId() {
@@ -93,6 +82,7 @@ public class Rental {
 		this.owner_id = owner_id;
 	}
 
+
 	public Timestamp getCreated_at() {
 		return created_at;
 	}
@@ -109,22 +99,22 @@ public class Rental {
 		this.updated_at = updated_at;
 	}
 	
-	/**
-	 * 
-	 * @return the RentalDto object for this rental
-	 */
-	public RentalDto toDto() {
-		RentalDto retour = new RentalDto();
-		retour.setId(this.id);
-		retour.setName(this.name);
-		retour.setSurface(this.surface);
-		retour.setPrice(this.price);
-		retour.setPicture(this.picture);
-		retour.setDescription(this.description);
-		retour.setOwner_id(this.owner_id);
-		retour.setCreated_at(this.created_at);
-		retour.setUpdated_at(this.updated_at);
-		return retour;
+	public String toJson() {
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+
+		return "{\r\n"
+		+ " \"id\":" + id.toString() + ",\r\n"
+		+ "	\"name\":\"" + name + "\",\r\n"
+		+ "	\"surface\":\"" + surface.toString() + "\",\r\n"
+		+ " \"price\":\"" + price.toString() + "\",\r\n"
+		+ " \"picture\":\"" + picture + "\",\r\n"
+		+ " \"description\":\"" + description + "\",\r\n"
+		+ " \"owner_id\":\"" + owner_id.toString() + "\",\r\n"
+		+ "	\"created_at\":\"" + sdf.format(created_at) +"\",\r\n"
+		+ "	\"updated_at\":\"" + sdf.format(updated_at) + "\"\r\n"
+		+ "}";
+		
 	}
 	
 }

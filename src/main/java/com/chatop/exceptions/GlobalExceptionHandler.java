@@ -3,7 +3,6 @@ package com.chatop.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,22 +23,27 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(value=MyWebInfoException.class)
-	public ResponseEntity<ErrorDetails> myWebNullException(MyWebInfoException ex) {
+	public ResponseEntity<ErrorDetails> myWebInfoException(MyWebInfoException ex) {
 		ErrorDetails errorModel = new ErrorDetails(406, ex.getMessage());
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.NOT_ACCEPTABLE);
 	}
 	
 	
 	@ExceptionHandler(value=AuthenticationCredentialsNotFoundException.class)
-	public ResponseEntity<ErrorDetails> myWebNullException(AuthenticationCredentialsNotFoundException ex) {
+	public ResponseEntity<ErrorDetails> authenticationCredentialsNotFoundException(AuthenticationCredentialsNotFoundException ex) {
 		ErrorDetails errorModel = new ErrorDetails(401, ex.getMessage());
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.FORBIDDEN);
 	}
 	
 	@ExceptionHandler(value=AuthorizationDeniedException.class)
-	public ResponseEntity<ErrorDetails> myWebNullException(AuthorizationDeniedException ex) {
+	public ResponseEntity<ErrorDetails> authorizationDeniedException(AuthorizationDeniedException ex) {
 		ErrorDetails errorModel = new ErrorDetails(401, ex.getMessage());
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.FORBIDDEN);
 	}
 	
+	@ExceptionHandler(value=MyNotFoundException.class)
+	public ResponseEntity<ErrorDetails> myNotFoundException(MyNotFoundException ex) {
+		ErrorDetails errorModel = new ErrorDetails(404, ex.getMessage());
+		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.NOT_FOUND);
+	}
 }

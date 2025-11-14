@@ -20,11 +20,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatop.configuration.CustomUserRequestBody;
-import com.chatop.exceptions.MyDbException;
 import com.chatop.exceptions.MyWebInfoException;
 import com.chatop.exceptions.MyWebNullException;
-import com.chatop.model.MyDbUser;
+import com.chatop.model.dto.UserDto;
 import com.chatop.services.JWTService;
 import com.chatop.services.UserService;
 
@@ -66,8 +64,8 @@ public class UserController {
     	//error 400 if no token or 200 if ok
     	log.info("api-auth-me path reached !   " + authentication.getName());//retourne l'email);
        	
-    	MyDbUser myDbUser = userService.findByEmail(authentication.getName());
-    	return myDbUser.toJson();
+    	UserDto user = userService.findByEmail(authentication.getName());
+    	return user.toJson();
     	
     }
     
@@ -76,17 +74,13 @@ public class UserController {
      * @return the user informations identified by the user id in the url
      */
     @GetMapping("/api/user/{id}")
-    public String getUserById(Authentication authentication, @PathVariable Integer id) {
+    public String getUserById( @PathVariable Integer id ) {
     	
-    	//log.info("getUserById(" + id.toString() + ")");
+     	//looking for the user in DB returning a userDto object
+    	UserDto user = userService.getById(id);
     	
-     	//looking for the  user in DB
-    	MyDbUser myUser = userService.getById(id);
-    	
-    	//log.info("returning : " +  myUser.toJson() );
-    	
-    	//returning the user
-    	return myUser.toJson();
+    	//returning the userDto Object
+    	return user.toJson();
     	
     }
     
@@ -96,13 +90,16 @@ public class UserController {
      * @return registered if OK or empty if not
      */
     @PostMapping("/api/auth/register")
-    public String postNewUser(@RequestBody CustomUserRequestBody requestBody) {
+    public String postNewUser(@RequestBody UserDto requestBody) {
     	    	
     	log.info("CustomRequestBody = " + requestBody.toString() + ")");
     	BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10, new SecureRandom());
     	String shaSalted = bCryptPasswordEncoder.encode( requestBody.getPassword());
     	
-    	MyDbUser myDbUser = null;
+    	/*
+    	 * code replaced by @size 3 130 in entity
+    	 * 
+    	UserDto user = null;
     	
     	//null Checking
 		if ((requestBody.getEmail()==null) || (requestBody.getName()==null) || (requestBody.getPassword()==null)) {
@@ -112,12 +109,16 @@ public class UserController {
 			if ((requestBody.getEmail().length()<3) || (requestBody.getName().length()<3) || (requestBody.getPassword().length()<3)) {
 				throw new MyWebInfoException("field length <3 is not permitted to save a user");
 			} else {
-				myDbUser = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted );
-    	   		log.info("myDbUser just created = " + myDbUser.toJson());
+				user = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted );
+    	   		log.info("myDbUser just created = " + user.toJson());
 			}
 		}
-		
-		//user is created, if not : an exception was thrown
+		*/
+    	
+		UserDto user = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted );
+   		log.info("myDbUser just created = " + user.toJson());
+   		
+		//user is created, if not : an exception has been thrown
     	//user authentication 
     	final List<SimpleGrantedAuthority> grantedAuths = new ArrayList<>(); //empty list
         final UserDetails principal = new User(requestBody.getEmail(), shaSalted, grantedAuths);
