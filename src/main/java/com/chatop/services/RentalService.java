@@ -159,4 +159,73 @@ public class RentalService {
 		return retour;
 	}
 
+	/**
+	 * 
+	 * @param idRental
+	 * @param name
+	 * @param surface
+	 * @param price
+	 * @param description
+	 * @param username
+	 * @return
+	 */
+	public Integer changeRental(Integer idRental, String name,Integer surface,Integer price,String description,String username) {
+		
+		Integer retour = 0;
+		
+		MyDbUser userConnected = null;			//the user connected
+		Rental rentalToChange = null;   //the rental to change
+		
+		//find user connected
+		try {
+			userConnected =  userRepo.findByEmail(username);
+		} catch (Exception e) {
+			log.error("addRental : user " + username +  " not found ==> " + e.getMessage());
+			throw new MyNotFoundException("addRental : user " + username +  " not found") ;
+		}
+		
+		//find rental
+		try {
+			rentalToChange = this.getById(idRental);
+		} catch (Exception e) {
+			log.error("addRental : rental to change id=" + idRental +  " not found ==> " + e.getMessage());
+			throw new MyNotFoundException("addRental : rental to change id=" + idRental +  " not found") ;
+		}
+
+		if (userConnected != null) {	
+			if (rentalToChange != null) {
+				if (userConnected.getId()==rentalToChange.getOwner().getId()) {
+					
+					//change
+					rentalToChange.setName(name);
+					rentalToChange.setDescription(description);
+					rentalToChange.setPrice(price);
+					rentalToChange.setSurface(surface);
+					rentalToChange.setUpdated_at( Timestamp.from(Instant.now()) );
+					
+					//save
+					try {
+						rentalToChange = rentalRepo.save(rentalToChange);
+					} catch (CannotCreateTransactionException ccte) {
+						log.error("rental " + name + " not changed " + ccte.getMessage() + " " + ccte.toString());
+						throw new MyDbException("rental " + name + " not changed " + ccte.getMessage() + " " + ccte.toString());
+					} catch (EntityNotFoundException enfe) {
+						throw new MyNotFoundException("rental not changed name=" + name);
+					} catch (Exception e) {
+						throw new MyNotFoundException("rental " + name + " not changed");
+					}
+					
+					retour = rentalToChange.getId();
+				} else {
+					log.error("addRental : user connected not == rental user");
+				}
+			} else {
+				log.error("addRental : rental to change not found");
+			}
+		} else {
+			log.error("addRental : user not found " + username);
+		}
+		
+		return retour;
+	}
 }

@@ -61,12 +61,13 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 		
 		//log.debug("FilterChain=" + filterChain.toString());
 		
-		if (request.getRequestURI().contains("register") || request.getRequestURI().contains("messages") ||
-				(request.getMethod()==HttpMethod.POST.toString())&&(request.getRequestURI().contains("rentals"))) {
-			log.debug("register or messages or post.rentals URL user must be already authenticated");
-			this.followFilterChain(request,response,filterChain);
-		} else {
-			
+		//if (request.getRequestURI().contains("register") || request.getRequestURI().contains("messages") ||
+		//		(request.getMethod()==HttpMethod.POST.toString())&&(request.getRequestURI().contains("rentals"))) {
+		//	log.debug("register or messages or post.rentals URL user must be already authenticated");
+		//	this.followFilterChain(request,response,filterChain);
+		//} else {
+		
+		if (request.getRequestURI().contains("login")) {
 			String bodyData=null;							//request body data contains JSON 
 			String userLogin = "";							//the login in the request
 			String userPwd = "";							//the password in the request
@@ -126,6 +127,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 				followFilterChain(request, response, filterChain);
 				
 			}
+		} else {
+			log.debug("not a login form : URL user must be already authenticated");
+			this.followFilterChain(request,response,filterChain);
 		}
     }
 	

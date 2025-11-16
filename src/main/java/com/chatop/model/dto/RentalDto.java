@@ -111,7 +111,7 @@ public class RentalDto {
 		+ " \"price\":\"" + price.toString() + "\",\r\n"
 		+ " \"picture\":\"" + picture + "\",\r\n"
 		+ " \"description\":\"" + description + "\",\r\n"
-		+ " \"owner_id\":\"" + owner_id.toString() + "\",\r\n"
+		+ " \"owner_id\":" + owner_id.toString() + ",\r\n"
 		+ "	\"created_at\":\"" + sdf.format(created_at) +"\",\r\n"
 		+ "	\"updated_at\":\"" + sdf.format(updated_at) + "\"\r\n"
 		+ "}";

@@ -35,6 +35,8 @@ public class MessageService {
 		msg.setCreated_at(Timestamp.from(Instant.now()));
 		msg.setUpdated_at(Timestamp.from(Instant.now()));
 		
+		//send an email ??
+		
 		return msgRepo.save(msg).getId();
 	}
 	

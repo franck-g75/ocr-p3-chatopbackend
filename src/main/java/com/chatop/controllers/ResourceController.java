@@ -64,15 +64,7 @@ public class ResourceController {
 		RentalDto myRental = rentalService.getById(id).toDto();
 		return myRental.toJson();
 	}
-	/*
-	@PostMapping(path = "/profiles/json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public String uploadProfileDirect(
-	    @RequestPart("userData") UserProfile profile,
-	    @RequestPart("avatar") MultipartFile avatar) {
-	    return "Profile for " + profile.getFirstName() + " with avatar named " + avatar.getOriginalFilename();
-	}
-	*/
-	
+		
 	@PostMapping(path="/api/rentals", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
 	public String AddRental( Authentication authentication,
 			@RequestParam("name") String name,
@@ -125,10 +117,17 @@ public class ResourceController {
 	}
 	
 	
-	@PutMapping("/api/rentals")
-	public String ChangeRental(  ) {
+	@PutMapping(value= "/api/rentals/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
+	public String changeRental( 
+			Authentication authentication,
+			@PathVariable Integer id,
+			@RequestParam("name") String name,
+			@RequestParam("surface") Integer surface,
+			@RequestParam("price") Integer price,
+		    @RequestParam("description") String description) {
 		//RentalDto myRental = rentalService;
-		return "";
+		Integer idRetour = rentalService.changeRental(id, name, surface, price, description, authentication.getName());
+		return "{\"id\":" + idRetour + "}";
 	}
 	
 	@GetMapping("/api/rentals")
