@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,10 +30,13 @@ public class SpringSecurityConfig {
         return http
         	.csrf((csrf) -> csrf.ignoringRequestMatchers("/api/auth/login","/api/auth/register")) 	//site non protégé sur CSRF uniquement sur cet endpoint
     	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   						//monFiltre anonyme CustomAuthenticationFilter pour la premiere connexion
-    	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				// filtre token OAuth2
+    	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				//filtre token OAuth2
          	.authorizeHttpRequests(   (authorize) -> authorize										//toutes les end point doivent etre sécurisés sauf register
-				.requestMatchers("/api/auth/login","/api/auth/me", "/api/user/{id}", "/api/rentals", "/api/rentals/**").authenticated()
-				.requestMatchers("/api/auth/register").permitAll()   )
+				.requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/user/**", "/api/rentals", "/api/rentals/**").authenticated()
+				.requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/rentals", "/api/messages").authenticated()
+				.requestMatchers(HttpMethod.PUT, "/api/rentals/**").authenticated()
+				.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+				.requestMatchers(HttpMethod.GET, "/image/**").permitAll()    )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session sans états
             .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub https://github.com/spring-projects/spring-security-samples
 					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			//protege des popups

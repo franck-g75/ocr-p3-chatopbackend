@@ -22,9 +22,8 @@ public class RentalDto {
 	private Timestamp created_at;
 	
 	private Timestamp updated_at;
-	
-	
-	
+
+	//------------------------------------------
 	
 	public Integer getId() {
 		return id;
@@ -98,6 +97,8 @@ public class RentalDto {
 	public void setUpdated_at(Timestamp updated_at) {
 		this.updated_at = updated_at;
 	}
+	
+	//---------------------------------------------------------------------
 	
 	public String toJson() {
 		

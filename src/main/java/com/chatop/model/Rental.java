@@ -1,35 +1,42 @@
 package com.chatop.model;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import com.chatop.model.dto.RentalDto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 @Entity @Table(name="rentals")
 public class Rental {
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Integer id;
 	
+	@Size(min = 1, max = 130)
 	private String name;
 	
+	@Min(value=0)
 	private Integer surface;
 	
+	@Min(value=0)
 	private Integer price;
 	
 	private String picture;
 	
+	@Size(min = 1, max = 2000)
 	private String description;
 	
-	private Integer owner_id;
+	@OneToOne
+	@JoinColumn(name = "owner_id")
+	private MyDbUser owner;
 	
 	private Timestamp created_at;
 	
@@ -85,12 +92,12 @@ public class Rental {
 		this.description = description;
 	}
 
-	public Integer getOwner_id() {
-		return owner_id;
+	public MyDbUser getOwner() {
+		return owner;
 	}
 
-	public void setOwner_id(Integer owner_id) {
-		this.owner_id = owner_id;
+	public void setOwner(MyDbUser owner) {
+		this.owner = owner;
 	}
 
 	public Timestamp getCreated_at() {
@@ -121,7 +128,7 @@ public class Rental {
 		retour.setPrice(this.price);
 		retour.setPicture(this.picture);
 		retour.setDescription(this.description);
-		retour.setOwner_id(this.owner_id);
+		retour.setOwner_id(this.owner.getId());
 		retour.setCreated_at(this.created_at);
 		retour.setUpdated_at(this.updated_at);
 		return retour;

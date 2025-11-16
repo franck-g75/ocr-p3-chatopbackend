@@ -15,13 +15,16 @@ public class UserDto {
     private Timestamp created_at;
 	private Timestamp updated_at;
 	
-	public UserDto() {}
+	//---------------------------------------------------------------------
 	
+	public UserDto() {}
 	
 	public UserDto(String email, String pwd) {
 		this.email = email;
 		this.password = pwd;
 	}
+	
+	//---------------------------------------------------------------------
 	
 	public Integer getId() {
 		return id;
@@ -66,10 +69,13 @@ public class UserDto {
 		this.updated_at = updated_at;
 	}
 	
+	//---------------------------------------------------------------------
 	
 	public String toString() {
 		return "userDto:{email=" + email + ", name=" + name + ", password=[disabled]}";
 	}
+	
+	//---------------------------------------------------------------------
 	
 	public String toJson() {
 		

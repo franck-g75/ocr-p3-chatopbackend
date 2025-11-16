@@ -8,9 +8,9 @@ import com.chatop.model.MyDbUser;
 @Repository
 public interface UserRepository extends JpaRepository<MyDbUser,Integer> {
 
-	MyDbUser findByName(String name);
-	MyDbUser findByEmail(String email);
-	MyDbUser getById(Integer id);
-	MyDbUser save(MyDbUser u);
+	public MyDbUser findByName(String name);
+	public MyDbUser findByEmail(String email);
+	public MyDbUser getById(Integer id);
+	public MyDbUser save(MyDbUser u);
     
 }

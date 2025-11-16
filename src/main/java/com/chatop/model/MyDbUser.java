@@ -1,8 +1,6 @@
 package com.chatop.model;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-
 import com.chatop.model.dto.UserDto;
 
 import jakarta.persistence.Entity;
@@ -81,7 +79,7 @@ public class MyDbUser {
 		this.updated_at = updated_at;
 	}
 	
-	
+	/*
 	public String toJson() {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
@@ -95,6 +93,7 @@ public class MyDbUser {
 		+ "}";
 		
 	}
+	*/
 	
 	public UserDto toDto() {
 		UserDto retour = new UserDto();

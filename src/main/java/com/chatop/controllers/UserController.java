@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatop.exceptions.MyWebInfoException;
-import com.chatop.exceptions.MyWebNullException;
 import com.chatop.model.dto.UserDto;
 import com.chatop.services.JWTService;
 import com.chatop.services.UserService;
@@ -61,11 +59,9 @@ public class UserController {
      */
     @GetMapping("/api/auth/me")
     public String getUserConnectedInfo(Authentication authentication) {
-    	//error 400 if no token or 200 if ok
-    	log.info("api-auth-me path reached !   " + authentication.getName());//retourne l'email);
-       	
-    	UserDto user = userService.findByEmail(authentication.getName());
-    	return user.toJson();
+    	
+    	//returning the userDto Object formatted in Json
+    	return userService.findByEmail(authentication.getName()).toDto().toJson();
     	
     }
     
@@ -76,11 +72,8 @@ public class UserController {
     @GetMapping("/api/user/{id}")
     public String getUserById( @PathVariable Integer id ) {
     	
-     	//looking for the user in DB returning a userDto object
-    	UserDto user = userService.getById(id);
-    	
-    	//returning the userDto Object
-    	return user.toJson();
+    	//returning the userDto Object formatted in Json
+    	return userService.getById(id).toDto().toJson();
     	
     }
     
@@ -115,7 +108,7 @@ public class UserController {
 		}
 		*/
     	
-		UserDto user = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted );
+		UserDto user = userService.saveUser( requestBody.getEmail(), requestBody.getName(), shaSalted ).toDto();
    		log.info("myDbUser just created = " + user.toJson());
    		
 		//user is created, if not : an exception has been thrown

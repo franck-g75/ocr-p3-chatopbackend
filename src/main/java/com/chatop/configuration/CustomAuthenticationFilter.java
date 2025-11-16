@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.BasicJsonParser;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,10 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.chatop.controllers.UserController;
 import com.chatop.repositories.UserRepository;
-import com.nimbusds.jose.shaded.gson.Gson;
 import com.chatop.model.MyDbUser;
-import com.chatop.model.dto.UserDto;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,8 +58,12 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 		
 		log.trace("CustomAuthenticationFilter.doFilterInternal(request,response,filterChain)...");
 		
-		if (request.getRequestURI().contains("register")) {
-			log.debug("register origin URL no authentication needed");
+		
+		//log.debug("FilterChain=" + filterChain.toString());
+		
+		if (request.getRequestURI().contains("register") || request.getRequestURI().contains("messages") ||
+				(request.getMethod()==HttpMethod.POST.toString())&&(request.getRequestURI().contains("rentals"))) {
+			log.debug("register or messages or post.rentals URL user must be already authenticated");
 			this.followFilterChain(request,response,filterChain);
 		} else {
 			
@@ -72,6 +74,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 			UsernamePasswordAuthenticationToken userToken = null;  //the authenticated user found
 			
 			// Récupération des données du body
+			
 			try {
 				bodyData = request.getReader().lines().collect(Collectors.joining()); //read the JSON in the request
 			} catch (IOException e) {

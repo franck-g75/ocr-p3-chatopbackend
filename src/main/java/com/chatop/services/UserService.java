@@ -14,7 +14,6 @@ import com.chatop.exceptions.MyNotFoundException;
 import com.chatop.exceptions.MyWebInfoException;
 import com.chatop.exceptions.MyWebNullException;
 import com.chatop.model.MyDbUser;
-import com.chatop.model.dto.UserDto;
 import com.chatop.repositories.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -37,9 +36,8 @@ public class UserService {
 	 * @throws MyWebNullException if 1 field is null
 	 * @throws MyWebInfoException if 1 field is empty
 	 */
-	public UserDto saveUser(String email, String name, String hash) throws MyDbException{
+	public MyDbUser saveUser(String email, String name, String hash) {
 		
-		UserDto retour = null;
 		MyDbUser myDbUser = new MyDbUser();
 		
 		myDbUser.setCreated_at( Timestamp.from(Instant.now()) );
@@ -49,7 +47,7 @@ public class UserService {
     	myDbUser.setPassword( hash );
     	
     	try {
-    		retour = userRepo.save(myDbUser).toDto();
+    		myDbUser = userRepo.save(myDbUser);
     	} catch (CannotCreateTransactionException ccte) {
 			log.error( "CannotCreateTransactionException " + ccte.getMessage() );
 			throw new MyDbException("CannotCreateTransactionException"); //don't show user database structure...
@@ -61,7 +59,7 @@ public class UserService {
     		throw new MyDbException("Exception"); //don't show user database structure...
     	}
     	
-    	return retour;
+    	return myDbUser;
 	}
 	
 	/**
@@ -69,18 +67,20 @@ public class UserService {
 	 * @param email
 	 * @return
 	 */
-	public UserDto findByEmail(String email) throws MyNotFoundException{
+	public MyDbUser findByEmail(String email) {
 		
-		UserDto retour = null;
+		MyDbUser retour = null;
 		
 		try {
-			retour = userRepo.findByEmail(email).toDto();
+			retour = userRepo.findByEmail(email);
 		} catch (CannotCreateTransactionException ccte) {
 			log.error("user " + email + " not found " + ccte.getMessage() + " " + ccte.toString());
 			throw new MyDbException("user " + email + " not found " + ccte.getMessage() + " " + ccte.toString());
 		} catch (EntityNotFoundException enfe) {
+			log.error("user " + email + " not found " + enfe.getMessage() + " " + enfe.toString());
 			throw new MyNotFoundException("user not found email=" + email);
 		} catch (Exception e) {
+			log.error("user " + email + " not found " + e.getMessage() + " " + e.toString());
 			throw new MyNotFoundException("user " + email + " not found");
 		}
 		
@@ -92,18 +92,20 @@ public class UserService {
 	 * @param id
 	 * @return 
 	 */
-	public UserDto getById(Integer id) {
+	public MyDbUser getById(Integer id) {
 		
-		UserDto retour = null;
+		MyDbUser retour = null;
 		
 		try {
-			retour = userRepo.getById(id).toDto();
+			retour = userRepo.getById(id);
 		} catch (CannotCreateTransactionException ccte) {
 			log.error("user " + id.toString() + " not found " + ccte.getMessage() + " " + ccte.toString());
 			throw new MyDbException("user " + id.toString() + " not found " + ccte.getMessage() + " " + ccte.toString());
 		} catch (EntityNotFoundException enfe) {
+			log.error("user " + id.toString() + " not found " + enfe.getMessage() + " " + enfe.toString());
 			throw new MyNotFoundException("user not found id=" + id.toString());
 		} catch (Exception e) {
+			log.error("user " + id.toString() + " not found " + e.getMessage() + " " + e.toString());
 			throw new MyNotFoundException("user " + id.toString() + " not found " + e.getMessage() + " " + e.toString());
 		}
 		
