@@ -1,5 +1,6 @@
 package com.chatop.configuration;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,21 +29,26 @@ public class SpringSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		
         return http
-        	.csrf((csrf) -> csrf.ignoringRequestMatchers("/api/auth/login","/api/auth/register")) 	//site non protégé sur CSRF uniquement sur cet endpoint
-    	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   						//monFiltre anonyme CustomAuthenticationFilter pour la premiere connexion
-    	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				//filtre token OAuth2
-         	.authorizeHttpRequests(   (authorize) -> authorize										//toutes les end point doivent etre sécurisés sauf register
-				.requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/user/**", "/api/rentals", "/api/rentals/**").authenticated()
+        	.csrf((csrf) -> csrf.ignoringRequestMatchers("/api/auth/login","/api/auth/register")) 	//site with no CSRF protection only on this endpoint
+    	   	.addFilterBefore(myFilter,AnonymousAuthenticationFilter.class)   						//CustomAuthenticationFilter for the first connection
+    	   	.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))				//token OAuth2 filter
+         	.authorizeHttpRequests(   (authorize) -> authorize										//all the end point must be securised except register
+				.requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/user/**", "/api/rentals", "/api/rentals/**" ).authenticated()
 				.requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/rentals", "/api/messages").authenticated()
 				.requestMatchers(HttpMethod.PUT, "/api/rentals/**").authenticated()
 				.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-				.requestMatchers(HttpMethod.GET, "/image/**").permitAll()    )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session sans états
-            .exceptionHandling((exceptions) -> exceptions											//protege des popups //trouvé sur gitHub https://github.com/spring-projects/spring-security-samples
-					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			//protege des popups
+				.requestMatchers(HttpMethod.GET, "/image/**", "/swagger-ui/**", "/v3/**").permitAll()    )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   //session stateless
+            .exceptionHandling((exceptions) -> exceptions											// popups //found on gitHub https://github.com/spring-projects/spring-security-samples
+					.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())			// popups protection
 					.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
 					)
             .build();
     }
+	
+	@Bean
+	public ModelMapper modelMapper() {
+	    return new ModelMapper();
+	}
 	
 }

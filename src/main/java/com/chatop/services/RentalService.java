@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.chatop.exceptions.MyDbException;
@@ -23,24 +22,23 @@ import com.chatop.model.Rental;
 import com.chatop.repositories.RentalRepository;
 import com.chatop.repositories.UserRepository;
 
-import jakarta.persistence.EntityNotFoundException;
-
 @Service
 public class RentalService {
 
 	Logger log = LoggerFactory.getLogger(RentalService.class);
 	
 	@Value("${server.tomcat.basedir}")
-	private String racineServeur;
+	private String serverBaseDir;
 	
 	@Value("${image.basedir}")
-	private String racineImage;
+	private String imageBaseDir;
 	
 	@Value("${image.baseurl}")
-	private String urlImage;	
+	private String imageUrl;	
 	
 	@Autowired
     private RentalRepository rentalRepo;
+	
 	@Autowired
     private UserRepository userRepo;
 	
@@ -48,17 +46,13 @@ public class RentalService {
 	 * get all rentals 
 	 * @return all rentals in database
 	 */
-	public List<Rental> findAll(){
+	public List<Rental> findAll() throws MyNotFoundException {
 		List<Rental> retour = new ArrayList<Rental>();
 		
 		try {
 			retour = rentalRepo.findAll();
-		} catch (CannotCreateTransactionException ccte) {
-			log.error("rentals not found " + ccte.getMessage() + " " + ccte.toString());
-			throw new MyDbException("rentals not found " + ccte.getMessage() + " " + ccte.toString());
-		} catch (EntityNotFoundException enfe) {
-			throw new MyNotFoundException("rentals not found.");
 		} catch (Exception e) {
+			log.error("rentals not found (other Exception)");
 			throw new MyNotFoundException("rentals not found");
 		}
 
@@ -76,13 +70,9 @@ public class RentalService {
 		
 		try {
 			retour = rentalRepo.getById(id);
-		} catch (CannotCreateTransactionException ccte) {
-			log.error("rental " + id + " not found " + ccte.getMessage() + " " + ccte.toString());
-			throw new MyDbException("rental " + id + " not found " + ccte.getMessage() + " " + ccte.toString());
-		} catch (EntityNotFoundException enfe) {
-			throw new MyNotFoundException("rental not found id=" + id);
 		} catch (Exception e) {
-			throw new MyNotFoundException("rental " + id + " not found");
+			log.error("rental " + id + " not found" + e.toString());
+			throw new MyNotFoundException("rental " + id + " not found (other Exception)");
 		}
 		
 		return retour;
@@ -99,7 +89,7 @@ public class RentalService {
 	 * @param username
 	 * @return the id of the new rental
 	 */
-	public Integer addRental(String name,Integer surface,Integer price,MultipartFile picture,String description,String username) {
+	public Integer addRental(Rental paramRental,MultipartFile pic, String username) throws MyNotFoundException, MyDbException, IOException {
 		
 		Integer retour = 0;
 		
@@ -109,45 +99,44 @@ public class RentalService {
 			user =  userRepo.findByEmail(username);
 		} catch (Exception e) {
 			log.error("addRental : user " + username +  " not found ==> " + e.getMessage());
-			throw new MyNotFoundException(e.getMessage()) ;
+			throw new MyNotFoundException("addRental : find user : " + username +  " not found") ;
 		}
+		
+		Rental newRental = new Rental();
 		
 		if (user != null) {	
 		
-			Rental newRental = new Rental();
-			newRental.setName(name);
-			newRental.setDescription(description);
-			newRental.setPrice(price);
-			newRental.setSurface(surface);
+			newRental.setDescription(paramRental.getDescription());
+			newRental.setName(paramRental.getName());
+			newRental.setPrice(paramRental.getPrice());
+			newRental.setSurface(paramRental.getSurface());
 			newRental.setOwner(user);
 			newRental.setUpdated_at( Timestamp.from(Instant.now()) );
 			newRental.setCreated_at( Timestamp.from(Instant.now()) );
 			
 			try {
 				newRental = rentalRepo.save(newRental);
-			} catch (CannotCreateTransactionException ccte) {
-				log.error("rental " + name + " not created " + ccte.getMessage() + " " + ccte.toString());
-				throw new MyDbException("rental " + name + " not created " + ccte.getMessage() + " " + ccte.toString());
-			} catch (EntityNotFoundException enfe) {
-				throw new MyNotFoundException("rental not created name=" + name);
 			} catch (Exception e) {
-				throw new MyNotFoundException("rental " + name + " not created");
+				throw new MyNotFoundException("rental " + newRental.getName() + " not created");
 			}
 			
-			String dir = racineServeur + "\\" + racineImage + "\\";
-			String fileName = "rental".concat(newRental.getId().toString().concat(".jpg"));
+			log.trace("newRental.getId() = ");
+			log.trace(newRental.getId().toString());
+			
+			String dir = serverBaseDir + "\\" + imageBaseDir + "\\";
+			String fileName = "rental".concat(newRental.getId().toString().concat(pic.getOriginalFilename()).concat(".jpg"));
 			
 			try {
 				Path path = Paths.get(dir + fileName);
 			    log.trace("fichier bientot transferé..." + path.toString());
-			    picture.transferTo(path.toFile());
-			    log.trace("fichier transfere ok");
+			    pic.transferTo(path.toFile());
+			    log.trace("fichier transfere : ok");
 			} catch (IOException e) {
 				log.error("IOException:" + e.toString());
 			}
 			
 			//save the picture name in rental object in db
-			newRental.setPicture(urlImage + "/" + fileName);
+			newRental.setPicture(imageUrl + "/" + fileName);
 			rentalRepo.save(newRental);
 			
 			retour = newRental.getId();
@@ -159,6 +148,7 @@ public class RentalService {
 		return retour;
 	}
 
+	
 	/**
 	 * 
 	 * @param idRental
@@ -167,13 +157,13 @@ public class RentalService {
 	 * @param price
 	 * @param description
 	 * @param username
-	 * @return
+	 * @return idRental
 	 */
-	public Integer changeRental(Integer idRental, String name,Integer surface,Integer price,String description,String username) {
+	public Integer changeRental(Integer idRental, Rental paramRental, String username) throws MyNotFoundException, MyDbException {
 		
 		Integer retour = 0;
 		
-		MyDbUser userConnected = null;			//the user connected
+		MyDbUser userConnected = null;	//the user connected
 		Rental rentalToChange = null;   //the rental to change
 		
 		//find user connected
@@ -197,22 +187,17 @@ public class RentalService {
 				if (userConnected.getId()==rentalToChange.getOwner().getId()) {
 					
 					//change
-					rentalToChange.setName(name);
-					rentalToChange.setDescription(description);
-					rentalToChange.setPrice(price);
-					rentalToChange.setSurface(surface);
+					rentalToChange.setName(paramRental.getName());
+					rentalToChange.setDescription(paramRental.getDescription());
+					rentalToChange.setPrice(paramRental.getPrice());
+					rentalToChange.setSurface(paramRental.getSurface());
 					rentalToChange.setUpdated_at( Timestamp.from(Instant.now()) );
 					
 					//save
 					try {
 						rentalToChange = rentalRepo.save(rentalToChange);
-					} catch (CannotCreateTransactionException ccte) {
-						log.error("rental " + name + " not changed " + ccte.getMessage() + " " + ccte.toString());
-						throw new MyDbException("rental " + name + " not changed " + ccte.getMessage() + " " + ccte.toString());
-					} catch (EntityNotFoundException enfe) {
-						throw new MyNotFoundException("rental not changed name=" + name);
 					} catch (Exception e) {
-						throw new MyNotFoundException("rental " + name + " not changed");
+						throw new MyNotFoundException("rental " + paramRental.getName() + " not changed");
 					}
 					
 					retour = rentalToChange.getId();
@@ -228,4 +213,6 @@ public class RentalService {
 		
 		return retour;
 	}
+
+	
 }

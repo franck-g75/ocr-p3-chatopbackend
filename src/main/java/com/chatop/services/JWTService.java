@@ -25,6 +25,9 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+/**
+ * used to manage the bearer token
+ */
 @Service
 public class JWTService {
 
@@ -39,20 +42,34 @@ public class JWTService {
     public JWTService() {
     }
     
-    //Cours + IA
+
+    
+    
+    /**
+     * generate the token
+     * @param authentication
+     * @return the token
+     */
     public String generateToken(Authentication authentication) {
 	    Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                    .issuer("self")
                    .issuedAt(now)
-                   .expiresAt(now.plus(10, ChronoUnit.MINUTES))
+                   .expiresAt(now.plus(30, ChronoUnit.MINUTES))
                    .subject(authentication.getName())
                    .build();
         log.info("Token generated at " + now.toString());
         return this.jwtEncoder().encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    //IA + FG
+    
+    
+    
+    /**
+     * 
+     * @param token
+     * @return
+     */
 	 public String getUsernameFromToken(String token) {
 		 log.info("getUsernameFromToken...");
 		 String retour =  this.jwtDecoder().decode(token).getSubject();
@@ -60,7 +77,14 @@ public class JWTService {
 		 return retour;
 	 }
 	 
-	 //IA + FG
+	 
+	 
+	 
+	 /**
+	  * 
+	  * @param token
+	  * @return 
+	  */
 	 private Instant getExpirationDateFromToken(String token) {
 		 log.info("getExpirationDateFromToken...");
 		 Instant retour =  this.jwtDecoder().decode(token).getExpiresAt();
@@ -68,29 +92,42 @@ public class JWTService {
 		 return retour;
 	 }	
 	 
-	 //IA + FG
+	 
+	 /**
+	  * 
+	  * @param token
+	  * @param userDetails
+	  * @return
+	  */
 	 public boolean validateToken(String token, UserDetails userDetails) {
 	     final String username = getUsernameFromToken(token);
 	     return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	 }
 	
-	 //IA + FG
+	 
+	 
+	 /**
+	  * 
+	  * @param token
+	  * @return
+	  */
 	 private boolean isTokenExpired(String token) {
 	     final Instant expiration = getExpirationDateFromToken(token);
 	     return expiration.isBefore(Instant.now());
 	 }
-	  /**
-	   * from https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/jwt/login/src/main/java/example/RestConfig.java
-	   * @return 
-	   */
+ 
+	/**
+	 * from https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/jwt/login/src/main/java/example/RestConfig.java
+	 * @return 
+	 */
      @Bean
 	 JwtDecoder jwtDecoder() {
 		return NimbusJwtDecoder.withPublicKey(this.key).build();
 	 }
 
-     /**
-      * from https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/jwt/login/src/main/java/example/RestConfig.java
-      */ 
+	/**
+	 * from https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/jwt/login/src/main/java/example/RestConfig.java
+	 */ 
 	 @Bean
 	 JwtEncoder jwtEncoder() {
 		JWK jwk = new RSAKey.Builder(this.key).privateKey(this.priv).build();

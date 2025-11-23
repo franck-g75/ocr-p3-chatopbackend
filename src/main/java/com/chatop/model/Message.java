@@ -2,6 +2,7 @@ package com.chatop.model;
 
 import java.sql.Timestamp;
 
+import com.chatop.model.dto.MessageDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,7 +27,7 @@ public class Message {
 	@JoinColumn(name = "user_id")
 	private MyDbUser user;
 	
-	@Size(min = 2, max = 2000)
+	@Size(min = 1, max = 2000)
 	private String message;
 	
 	private Timestamp created_at;
@@ -89,4 +90,17 @@ public class Message {
 	}
 	
 	
+	
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public MessageDto toDto() {
+		MessageDto retour = new MessageDto();
+		retour.setMessage(message);
+		retour.setUser_id(user.getId());
+		retour.setRental_id(rental.getId());
+		return retour;
+	}
 }

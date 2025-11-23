@@ -1,8 +1,7 @@
 package com.chatop.model;
 
 import java.sql.Timestamp;
-import com.chatop.model.dto.RentalDto;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,15 +19,18 @@ public class Rental {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Integer id;
 	
-	@Size(min = 1, max = 130)
+	@Size(min = 1, max = 255)
 	private String name;
 	
-	@Min(value=0)
+	@Min(value=1)
+	@Column(name = "surface", precision = 10, scale = 0)
 	private Integer surface;
 	
-	@Min(value=0)
+	@Min(value=1)
+	@Column(name = "price", precision = 10, scale = 0)
 	private Integer price;
 	
+	@Column(name="picture", nullable = false)
 	private String picture;
 	
 	@Size(min = 1, max = 2000)
@@ -114,24 +116,6 @@ public class Rental {
 
 	public void setUpdated_at(Timestamp updated_at) {
 		this.updated_at = updated_at;
-	}
-	
-	/**
-	 * 
-	 * @return the RentalDto object for this rental
-	 */
-	public RentalDto toDto() {
-		RentalDto retour = new RentalDto();
-		retour.setId(this.id);
-		retour.setName(this.name);
-		retour.setSurface(this.surface);
-		retour.setPrice(this.price);
-		retour.setPicture(this.picture);
-		retour.setDescription(this.description);
-		retour.setOwner_id(this.owner.getId());
-		retour.setCreated_at(this.created_at);
-		retour.setUpdated_at(this.updated_at);
-		return retour;
 	}
 	
 }

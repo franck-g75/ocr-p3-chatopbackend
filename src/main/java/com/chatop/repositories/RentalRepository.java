@@ -3,7 +3,6 @@ package com.chatop.repositories;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.chatop.model.Rental;
@@ -14,5 +13,5 @@ public interface RentalRepository extends JpaRepository<Rental,Integer> {
 	public List<Rental> findAll();
 	public Rental getById(Integer id);
 	public Rental save(Rental r);
-	//public Rental update(Rental r);
+
 }

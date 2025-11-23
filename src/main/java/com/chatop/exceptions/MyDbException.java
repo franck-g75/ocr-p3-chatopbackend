@@ -3,6 +3,9 @@ package com.chatop.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * 500
+ */
 @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
 public class MyDbException extends RuntimeException {
 

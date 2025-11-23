@@ -1,13 +1,13 @@
 package com.chatop.model;
 
 import java.sql.Timestamp;
-import com.chatop.model.dto.UserDto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 @Entity @Table(name="users")
@@ -19,10 +19,11 @@ public class MyDbUser {
 	@GeneratedValue(strategy=GenerationType.IDENTITY) //identity : pas de sequences
 	private Integer id;
 	
-	@Size(min = 3, max = 130)
+	@Email
+	@Size(min = 3, max = 255)
 	private String email;
 	
-	@Size(min = 3, max = 130)
+	@Size(min = 3, max = 255)
 	private String name;
 	
 	private String password;
@@ -79,30 +80,5 @@ public class MyDbUser {
 		this.updated_at = updated_at;
 	}
 	
-	/*
-	public String toJson() {
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
-
-		return "{\r\n"
-		+ " \"id\":" + id.toString() + ",\r\n"
-		+ "	\"name\":\"" + name + "\",\r\n"
-		+ "	\"email\":\"" + email + "\",\r\n"
-		+ "	\"created_at\":\"" + sdf.format(created_at) +"\",\r\n"
-		+ "	\"updated_at\":\"" + sdf.format(updated_at) + "\"\r\n"
-		+ "}";
-		
-	}
-	*/
 	
-	public UserDto toDto() {
-		UserDto retour = new UserDto();
-		retour.setId(id);
-		retour.setName(name);
-		retour.setEmail(email);
-		retour.setCreated_at(created_at);
-		retour.setUpdated_at(updated_at);
-		return retour;
-	}
-
 }
