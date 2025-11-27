@@ -2,14 +2,15 @@ package com.chatop.model.dto;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * DTO to read a user
+ */
 public class ReadUserDto {
 
 		Logger log = LoggerFactory.getLogger(ReadUserDto.class);
@@ -17,7 +18,7 @@ public class ReadUserDto {
 		private Integer id;
 		public String email;
 		public String name;
-		public String password;
+		//password is not showed even if it is hashed and salted
 	    private Timestamp created_at;
 		private Timestamp updated_at;
 		
@@ -40,13 +41,6 @@ public class ReadUserDto {
 		}
 		public void setEmail(String email) {
 			this.email = email;
-		}
-		
-		public String getPassword() {
-			return password;
-		}
-		public void setPassword(String password) {
-			this.password = password;
 		}
 		
 		public String getName() {

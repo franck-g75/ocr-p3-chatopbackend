@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * 400 bad request
+ * When something is wrong in the body request (field with wrong size or missing)
  */
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
 public class MyWebInfoException extends RuntimeException {

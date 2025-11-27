@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import com.chatop.model.Rental;
 
+/**
+ * RentalRepository
+ */
 @Repository
 public interface RentalRepository extends JpaRepository<Rental,Integer> {
 	

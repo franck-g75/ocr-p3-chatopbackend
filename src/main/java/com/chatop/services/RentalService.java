@@ -12,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.chatop.exceptions.MyDbException;
@@ -42,37 +44,48 @@ public class RentalService {
 	@Autowired
     private UserRepository userRepo;
 	
+	
+	
 	/**
 	 * get all rentals 
 	 * @return all rentals in database
 	 */
-	public List<Rental> findAll() throws MyNotFoundException {
-		List<Rental> retour = new ArrayList<Rental>();
+	public List<Rental> findAll() throws DataAccessResourceFailureException, MyNotFoundException {
+		
+		List<Rental> allRentals = new ArrayList<Rental>();
 		
 		try {
-			retour = rentalRepo.findAll();
+			allRentals = rentalRepo.findAll();
+		} catch (CannotCreateTransactionException ex) {
+			throw new CannotCreateTransactionException("DB connection not avaiable...");
 		} catch (Exception e) {
-			log.error("rentals not found (other Exception)");
-			throw new MyNotFoundException("rentals not found");
+			log.error("rentals not found  " + e.getMessage());
+			throw new MyNotFoundException("rentals not found  " + e.getMessage());
 		}
 
-		return retour;
+		return allRentals;
 	}
+	
+
 	
 	/**
 	 * get the rental by his id
 	 * @param id
 	 * @return the rental identified by the id parameter
+	 * @throws MyNotFoundException
 	 */
-	public Rental getById(Integer id) throws MyNotFoundException, MyDbException {
+	public Rental getById(Integer id) throws MyNotFoundException {
 		
 		Rental retour = null;
 		
 		try {
 			retour = rentalRepo.getById(id);
+		} catch (CannotCreateTransactionException e) {
+			log.error("CannotCreateTransactionException  rental " + id + " not found  " + e.getMessage());
+			throw new CannotCreateTransactionException("CannotCreateTransactionException   rental " + id + " not found  " + e.getMessage());
 		} catch (Exception e) {
-			log.error("rental " + id + " not found" + e.toString());
-			throw new MyNotFoundException("rental " + id + " not found (other Exception)");
+			log.error("rental " + id + " not found  " + e.getMessage());
+			throw new MyNotFoundException("rental " + id + " not found  " + e.getMessage());
 		}
 		
 		return retour;
@@ -81,15 +94,14 @@ public class RentalService {
 	
 	/**
 	 * 
-	 * @param name
-	 * @param surface
-	 * @param price
-	 * @param picture
-	 * @param description
+	 * @param paramRental
+	 * @param pic
 	 * @param username
-	 * @return the id of the new rental
+	 * @return
+	 * @throws MyNotFoundException
+	 * @throws IOException
 	 */
-	public Integer addRental(Rental paramRental,MultipartFile pic, String username) throws MyNotFoundException, MyDbException, IOException {
+	public Integer addRental(Rental paramRental,MultipartFile pic, String username) throws CannotCreateTransactionException, MyNotFoundException, MyDbException, IOException {
 		
 		Integer retour = 0;
 		
@@ -97,9 +109,12 @@ public class RentalService {
 		
 		try {
 			user =  userRepo.findByEmail(username);
+		} catch (CannotCreateTransactionException e) {
+			log.error("addRental : user " + username +  " not found ==> " + e.getMessage());
+			throw new CannotCreateTransactionException("addRental : user " + username +  " not found");
 		} catch (Exception e) {
 			log.error("addRental : user " + username +  " not found ==> " + e.getMessage());
-			throw new MyNotFoundException("addRental : find user : " + username +  " not found") ;
+			throw new MyNotFoundException(" addRental : find user : " + username +  " not found") ;
 		}
 		
 		Rental newRental = new Rental();
@@ -124,15 +139,16 @@ public class RentalService {
 			log.trace(newRental.getId().toString());
 			
 			String dir = serverBaseDir + "\\" + imageBaseDir + "\\";
-			String fileName = "rental".concat(newRental.getId().toString().concat(pic.getOriginalFilename()).concat(".jpg"));
+			String fileName = "rental".concat(newRental.getId().toString().concat(pic.getOriginalFilename()));
 			
 			try {
 				Path path = Paths.get(dir + fileName);
-			    log.trace("fichier bientot transferé..." + path.toString());
+			    log.trace("file transfered soon..." + path.toString());
 			    pic.transferTo(path.toFile());
-			    log.trace("fichier transfere : ok");
+			    log.trace("file transfered : ok");
 			} catch (IOException e) {
 				log.error("IOException:" + e.toString());
+				throw new IOException("rental file transfer pbm " + e.getMessage());
 			}
 			
 			//save the picture name in rental object in db

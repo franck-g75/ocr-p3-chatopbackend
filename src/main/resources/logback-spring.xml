@@ -7,15 +7,15 @@
     </appender>
     
     <!-- LOG everything at INFO level -->
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="Console" />
     </root>
 
-	<logger name="org.springframework" level="trace" additivity="false">
+	<logger name="org.springframework" level="debug" additivity="false">
         <appender-ref ref="Console" />
     </logger>
     
-    <logger name="org.springframework.security" level="trace" additivity="false">
+    <logger name="org.springframework.security" level="debug" additivity="false">
         <appender-ref ref="Console" />
     </logger>
     

@@ -54,8 +54,4 @@ public class ChangeRentalDto {
 		this.description = description;
 	}
 
-
-	
-	//--------------------------------------------------------------------------------------
-	
 }

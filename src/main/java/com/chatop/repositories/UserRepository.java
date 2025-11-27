@@ -5,6 +5,9 @@ import org.springframework.stereotype.Repository;
 
 import com.chatop.model.MyDbUser;
 
+/**
+ * UserRepository
+ */
 @Repository
 public interface UserRepository extends JpaRepository<MyDbUser,Integer> {
 

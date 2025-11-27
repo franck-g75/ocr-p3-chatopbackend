@@ -15,12 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.expression.ParseException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.HeadersBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,23 +37,29 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.chatop.exceptions.MyDbException;
 import com.chatop.exceptions.MyNotFoundException;
 import com.chatop.exceptions.MyWebInfoException;
+
 import com.chatop.model.Message;
 import com.chatop.model.MyDbUser;
 import com.chatop.model.Rental;
+import com.chatop.model.dto.AddMessageDto;
 import com.chatop.model.dto.AddRentalDto;
 import com.chatop.model.dto.ChangeRentalDto;
-import com.chatop.model.dto.MessageDto;
 import com.chatop.model.dto.ReadRentalDto;
 import com.chatop.services.MessageService;
 import com.chatop.services.RentalService;
 import com.chatop.services.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 
 @Tag(name = "ResourceController", description = "rental, messages and image management API")
+@SecurityScheme(name="bearerAuth", type=SecuritySchemeType.HTTP, scheme="bearer", bearerFormat="JWT" )
 @RestController
 public class ResourceController {
 
@@ -78,21 +87,52 @@ public class ResourceController {
 	
 	
 	
-	@Operation(summary="get rental by id.",
-			parameters = {
-					@Parameter(name = "id", description = "the id of the rental.", required = true)
-				},
-				responses = {
-				    @ApiResponse(responseCode = "200", description = "rental returned."),
-				    @ApiResponse(responseCode = "400", description = "rental not found (Bad request)"),
-				    @ApiResponse(responseCode = "401", description = "User not connected (unauthorised)"),
+	
+	
+	
+	/**
+	 * getAllRentals
+	 * @return
+	 * @throws MyNotFoundException
+	 * @throws MyDbException
+	 * @throws IOException
+	 */
+	@Operation(summary="get all rentals.", security=@SecurityRequirement(name="bearerAuth"),
+			responses = {
+				    @ApiResponse(responseCode = "200", description = "rentals returned."),
+				    @ApiResponse(responseCode = "401", description = "User not connected (unauthorized)"),
+				    @ApiResponse(responseCode = "404", description = "rentals not found"),
 				    @ApiResponse(responseCode = "500", description = "Server error")
 				})
-	@GetMapping("/api/rentals/{id}")
-	public String getRentalsById( @PathVariable Integer id ) throws MyNotFoundException, MyDbException, IOException {
-		ReadRentalDto myRental = convertToReadDto(rentalService.getById(id));
-		String retour = myRental.toJson();
-		return retour;
+	@GetMapping("/api/rentals")
+	public ResponseEntity<String> getAllRentals() throws MyNotFoundException, IOException {
+		
+		String rentalTab="";
+		
+		try {
+			
+			List<Rental> allRentals = rentalService.findAll();
+			
+			if (allRentals != null) {
+				rentalTab = "{\"rentals\": [";
+				for ( Rental rental : allRentals ) {
+					ReadRentalDto readRentaldto = convertToReadDto(rental);
+					rentalTab = rentalTab + readRentaldto.toJson() + ",";
+				}
+				rentalTab = rentalTab.substring(0, rentalTab.length()-1).concat("]}");
+			} else {
+				log.error("EntityNotFound : all rental is null");
+				return ResponseEntity.badRequest().body("EntityNotFound all rental is null ");
+			}
+		} catch (CannotCreateTransactionException ex) {
+			return ResponseEntity.internalServerError().body("{\"message\":\"DB connection not avaiable...\"}" );//500
+		} catch(MyNotFoundException mnfe) {
+			return ResponseEntity.notFound().build();//404
+		} catch (IOException ioe) {
+			return ResponseEntity.internalServerError().body("{\"message\":\"IOException " + ioe.getMessage()+"\"}" );//500
+		} 
+		
+		return ResponseEntity.ok(rentalTab);//200
 	}
 	
 	
@@ -100,15 +140,57 @@ public class ResourceController {
 	
 	
 	
-	
-	@Operation(summary="new rental.",
+	/**
+	 * getRentalsById
+	 * @param id
+	 * @return 
+	 * @throws MyNotFoundException
+	 * @throws MyDbException
+	 * @throws IOException
+	 */
+	@Operation(summary="get rental by id.", security=@SecurityRequirement(name="bearerAuth"),
 			parameters = {
-					@Parameter(name = "name", description = "the user name.", required = true),
-					@Parameter(name = "surface", description = "the surface of the rental.", required = true),
-					@Parameter(name = "price", description = "the priceof the rental.", required = true),
-					@Parameter(name = "picture", description = "the picture to upload.", required = true),
-					@Parameter(name = "description", description = "the description of the rental.", required = true)
+					@Parameter(name="id", description="the id of the rental.", required=true)
 				},
+			responses = {
+			    @ApiResponse(responseCode = "200", description = "rental returned."),
+			    @ApiResponse(responseCode = "400", description = "rental not found (Bad request)"),
+			    @ApiResponse(responseCode = "401", description = "User not connected (unauthorised)"),
+			    @ApiResponse(responseCode = "404", description = "rental not found (not found)"),
+			    @ApiResponse(responseCode = "500", description = "Server error")
+			})
+	@GetMapping("/api/rentals/{id}")
+	public ResponseEntity<String> getRentalsById( @PathVariable Integer id ) {
+		String rentalDtoToJson="";
+		
+		try {
+			rentalDtoToJson = convertToReadDto(rentalService.getById(id)).toJson();
+		} catch (CannotCreateTransactionException e) {
+			return ResponseEntity.internalServerError().body("{\"message\":\"" + e.getMessage() +"\"}" );
+		} catch (MyNotFoundException mnfe) {
+			return ResponseEntity.badRequest().body("{\"message\":\"MyNotFoundException" + mnfe.getMessage() +"\"}" );
+		} catch (IOException ioe) {
+			return ResponseEntity.internalServerError().body("{\"message\":\"IOException" + ioe.getMessage() + "\"}" );
+		}
+	
+		return ResponseEntity.ok( rentalDtoToJson );
+	}
+	
+	
+	
+	
+	
+	
+	/**
+	 * addRental
+	 * @param authentication
+	 * @param addRentalDto
+	 * @return
+	 * @throws MyNotFoundException
+	 * @throws MyDbException
+	 * @throws IOException
+	 */
+	@Operation(summary="new rental.", security=@SecurityRequirement(name="bearerAuth"),
 				responses = {
 				    @ApiResponse(responseCode = "201", description = "rental created."),
 				    @ApiResponse(responseCode = "400", description = "Bad request"),
@@ -117,42 +199,45 @@ public class ResourceController {
 				    @ApiResponse(responseCode = "500", description = "Server error")
 				})
 	@PostMapping(path="/api/rentals", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
-	public String addRental( Authentication authentication,  @ModelAttribute AddRentalDto addRentalDto ) 
+	public ResponseEntity<String> addRental( Authentication authentication,  @ModelAttribute AddRentalDto addRentalDto ) 
 					throws MyNotFoundException, MyDbException, IOException {
+		Integer rentalId = 0;
+		URI returnedUri = null;
 		
 		log.trace("authentication.getPrincipal().toString() = " + authentication.getPrincipal().toString() + " et le mail = " + authentication.getName());
+		try {
+			
+			Rental outRental = convertToEntity(addRentalDto);
+			rentalId = rentalService.addRental(outRental, addRentalDto.getPicture(), authentication.getName());//throws exceptions
+			returnedUri =  new URI( "http://localhost:8080/api/rentals/" + rentalId.toString() );
+			
+		} catch (URISyntaxException e) {
+			return ResponseEntity.internalServerError().body("URISyntaxException" + e.getMessage());
+		} catch (MyNotFoundException mnfe) {
+			return ResponseEntity.badRequest().body("MyNotFoundException" + mnfe.getMessage());
+		} catch (MyDbException mdbe) {
+			return ResponseEntity.internalServerError().body("MyDbException" + mdbe.getMessage());
+		} catch (IOException ioe) {
+			return ResponseEntity.internalServerError().body("IOException" + ioe.getMessage());
+		}
 		
-		Rental outRental = convertToEntity(addRentalDto);
+		return ResponseEntity.created(returnedUri).body("{\"message\":\"rental created\"}");
 		
-		//throws exceptions
-		rentalService.addRental(outRental, addRentalDto.getPicture(), authentication.getName());
-		
-		return "{\"message\":\"rental created\"}";
 	}
 	
 	
 
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	@Operation(summary="new rental.",
-			parameters = {
-					@Parameter(name = "name", description = "the rental name.", required = true),
-					@Parameter(name = "surface", description = "the surface of the rental.", required = true),
-					@Parameter(name = "price", description = "the price of the rental.", required = true),
-					@Parameter(name = "description", description = "the description of the rental.", required = true)
-				},
+	/**
+	 * changeRental
+	 * @param authentication
+	 * @param id
+	 * @param changeRentalDto
+	 * @return
+	 * @throws MyNotFoundException
+	 * @throws MyDbException
+	 */
+	@Operation(summary="change rental.", security=@SecurityRequirement(name="bearerAuth"),
 				responses = {
 				    @ApiResponse(responseCode = "201", description = "rental created."),
 				    @ApiResponse(responseCode = "400", description = "Bad request"),
@@ -161,56 +246,33 @@ public class ResourceController {
 				    @ApiResponse(responseCode = "500", description = "Server error")
 				})
 	@PutMapping( value= "/api/rentals/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
-	public String changeRental( 
+	public ResponseEntity<String> changeRental( 
 					Authentication authentication,
 					@PathVariable Integer id,
 					@ModelAttribute ChangeRentalDto changeRentalDto)
 					throws MyNotFoundException, MyDbException {
 		
-			log.trace("authentication.getPrincipal().toString() = " + authentication.getPrincipal().toString() + " et le mail = " + authentication.getName());
-
+		log.trace("authentication.getPrincipal().toString() = " + authentication.getPrincipal().toString() + " et le mail = " + authentication.getName());
+			
+		try {
+			
 			Rental outRental = convertToEntity(changeRentalDto,id);
-		
 			rentalService.changeRental(id, outRental, authentication.getName());
+			
+		} catch(MyNotFoundException mnfe) {
+			return ResponseEntity.badRequest().body("MyNotFoundException " + mnfe.getMessage());
+		} catch(MyDbException mdbe) {
+			return ResponseEntity.internalServerError().body("MyDbException " + mdbe.getMessage());
+		} catch(ParseException pe) {
+			return ResponseEntity.internalServerError().body("ParseException " + pe.getMessage());
+		} 
 		
-		return "{\"message\":\"Rental updated !\"}";
+		return ResponseEntity.ok().body("{\"message\":\"Rental updated !\"}");
 	}
 	
 	
 	
 	
-	
-	
-
-
-	@Operation(summary="get all rentals.",
-			responses = {
-				    @ApiResponse(responseCode = "200", description = "rentals returned."),
-				    @ApiResponse(responseCode = "401", description = "User not connected (unauthorised)"),
-				    @ApiResponse(responseCode = "404", description = "rentals not found"),
-				    @ApiResponse(responseCode = "500", description = "Server error")
-				})
-	@GetMapping("/api/rentals")
-	public String getAllRentals() throws MyNotFoundException, MyDbException, IOException {
-		
-		String retour ="";
-		
-		List<Rental> allRentals = rentalService.findAll();
-		
-		if (allRentals != null) {
-			retour = "{\"rentals\": [";
-			for ( Rental rental : allRentals ) {
-				ReadRentalDto readRentaldto = convertToReadDto(rental);
-				retour = retour + readRentaldto.toJson() + ",";
-			}
-			retour = retour.substring(0, retour.length()-1).concat("]}");
-		} else {
-			log.error("EntityNotFoundException : rentals not found");
-			throw new EntityNotFoundException("EntityNotFoundException : rentals not found");
-		}
-		
-		return retour;
-	}
 	
 	
 	
@@ -267,7 +329,7 @@ public class ResourceController {
 	
 	//---------------------------------MESSAGES--------------------------------------------------------------
 	
-	@Operation(summary="new message form.",
+	@Operation(summary="new message form.", security=@SecurityRequirement(name="bearerAuth"),
 			parameters = {
 					@Parameter(name = "message", description = "the message contains the text of the message.", required = true),
 					@Parameter(name = "user_id", description = "the user identifier.", required = true),
@@ -277,11 +339,12 @@ public class ResourceController {
 				    @ApiResponse(responseCode = "201", description = "Message created"),
 				    @ApiResponse(responseCode = "400", description = "Message not created (bad request)"),
 				    @ApiResponse(responseCode = "401", description = "User not connected (unauthorised)"),
+				    @ApiResponse(responseCode = "403", description = "invalid CSRF token (forbiden)"),
 				    @ApiResponse(responseCode = "404", description = "Not found : The user or the rental is not found."),
 				    @ApiResponse(responseCode = "500", description = "Server error")
 				})
 	@PostMapping("/api/messages")
-	public ResponseEntity<String> postMessage(@RequestBody MessageDto requestMsg) throws MyNotFoundException, MyWebInfoException, URISyntaxException {
+	public ResponseEntity<String> postMessage(@RequestBody AddMessageDto requestMsg) throws MyNotFoundException, MyWebInfoException, URISyntaxException {
 		log.info("postMessage... requestMsg = " + requestMsg.toJson() );
 		Message msg = msgService.save(requestMsg);
 		log.info("msgDto saved = {\"message\":\"".concat(msg.getId().toString()).concat("\"}"));
@@ -292,14 +355,25 @@ public class ResourceController {
 	
 //-----------------------------------Private------------------------------------------------------------------------------------------------------------	
 	
+	/**
+	 * Convert a rental to a ReadRentalDto
+	 * @param rental
+	 * @return
+	 */
 	private ReadRentalDto convertToReadDto(Rental rental) {
 		ReadRentalDto readRentalDto = modelMapper.map(rental, ReadRentalDto.class);
 		readRentalDto.setOwner_id(rental.getOwner().getId());
 	    return readRentalDto;
 	}
 	
-	
-	private Rental convertToEntity(ChangeRentalDto changeRentalDto, Integer id) throws ParseException {
+	/**
+	 * Convert a changeRentalDto to a Rental
+	 * @param changeRentalDto
+	 * @param id
+	 * @return
+	 * @throws ParseException
+	 */
+	private Rental convertToEntity(ChangeRentalDto changeRentalDto, Integer id) throws ParseException, EntityNotFoundException {
 		
 	    Rental rental = modelMapper.map(changeRentalDto, Rental.class);
 	    
@@ -331,9 +405,14 @@ public class ResourceController {
 	    return rental;
 	}
 	
+	
+	/**
+	 * Convert a addREntalDto to a Rental
+	 * @param addRentalDto
+	 * @return
+	 * @throws ParseException
+	 */
 	private Rental convertToEntity(AddRentalDto addRentalDto) throws ParseException {
-		
 		return modelMapper.map(addRentalDto, Rental.class);
-		
 	}
 }

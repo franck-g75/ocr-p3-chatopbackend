@@ -28,4 +28,7 @@ public class ErrorDetails {
 		return message;
 	}
 
+	public String toString() {
+		return status.toString() + " " + statusMsg + " " + message;
+	}
 }

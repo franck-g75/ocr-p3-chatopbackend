@@ -3,6 +3,7 @@ package com.chatop.exceptions;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -17,6 +18,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Every exceptions placed in this class is catched before my catch statement.
+ * It prevent me from writing a lot of catching code.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	
@@ -50,11 +55,9 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
-	
-	
-	
+	//-----------------------------------------------------------------------------------------------------
 	//Exceptions thrown by the system
-	//they are catched before the catch statement in chatopBackEnd code
+	//they are catched before the catch statement in chatopBackEnd code 
 	
 	//MalformedURLException
 	@ExceptionHandler(value=MalformedURLException.class)
@@ -82,20 +85,20 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorDetails> cannotCreateTransactionException(CannotCreateTransactionException ex) {
 		ErrorDetails errorModel = new ErrorDetails(500, "INTERNAL_SERVER_ERROR", ex.getMessage());
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.INTERNAL_SERVER_ERROR);
+	}  
+	
+	//DB is off
+	@ExceptionHandler(value=DataAccessResourceFailureException.class)
+	public ResponseEntity<ErrorDetails> dataAccessResourceFailureException(DataAccessResourceFailureException ex) {
+		ErrorDetails errorModel = new ErrorDetails(500, "INTERNAL_SERVER_ERROR", ex.getMessage());
+		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
-	//the URL does not match any authorized request or something is not found in DB
+	//the URL does not match any authorized request or something is not found in DB //404 ??
 	@ExceptionHandler(value=NoResourceFoundException.class)
 	public ResponseEntity<ErrorDetails> noResourceFoundException(NoResourceFoundException ex) {
 		ErrorDetails errorModel = new ErrorDetails(403, "FORBIDDEN", ex.getMessage());
 		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.FORBIDDEN);
-	}
-	
-	//INTERNAL_SERVER_ERROR
-	@ExceptionHandler(value=RuntimeException.class)
-	public ResponseEntity<ErrorDetails> runtimeException(RuntimeException ex) {
-		ErrorDetails errorModel = new ErrorDetails(500, "INTERNAL_SERVER_ERROR", ex.getMessage());
-		return new ResponseEntity<ErrorDetails>  (errorModel, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
 	//the login and the password don't match any user login and password

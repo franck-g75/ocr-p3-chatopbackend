@@ -12,6 +12,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Entity rental object
+ */
 @Entity @Table(name="rentals")
 public class Rental {
 	

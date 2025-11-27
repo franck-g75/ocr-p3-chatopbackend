@@ -6,6 +6,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+/**
+ * DTO to add a rental
+ */
 @Schema(description = "AddRentalDto Model")
 public class AddRentalDto {
 
@@ -19,7 +22,7 @@ public class AddRentalDto {
 
 	public AddRentalDto() {}
 
-	public AddRentalDto(String name, Integer surface,	Integer price, MultipartFile pic, String description , Integer owner_id) {
+	public AddRentalDto(String name, Integer surface, Integer price, MultipartFile pic, String description , Integer owner_id) {
 		this.name = name;
 		this.surface = surface;
 		this.price = price;
@@ -67,6 +70,4 @@ public class AddRentalDto {
 		this.description = description;
 	}
 
-	//---------------------------------------------------------------------------------------
-	
 }

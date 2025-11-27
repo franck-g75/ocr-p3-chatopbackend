@@ -11,7 +11,7 @@ import com.chatop.exceptions.MyWebInfoException;
 import com.chatop.model.Message;
 import com.chatop.model.MyDbUser;
 import com.chatop.model.Rental;
-import com.chatop.model.dto.MessageDto;
+import com.chatop.model.dto.AddMessageDto;
 import com.chatop.repositories.MessageRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -37,7 +37,7 @@ public class MessageService {
 	 * @throws EntityNotFoundException
 	 * @throws MyWebInfoException
 	 */
-	public Message save(MessageDto m) throws EntityNotFoundException , MyWebInfoException {
+	public Message save(AddMessageDto m) throws EntityNotFoundException , MyWebInfoException {
 		
 		log.info("saving message...");
 		

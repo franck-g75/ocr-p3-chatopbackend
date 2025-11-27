@@ -6,7 +6,10 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
+
 import com.chatop.exceptions.MyDbException;
 import com.chatop.exceptions.MyNotFoundException;
 import com.chatop.exceptions.MyWebInfoException;
@@ -44,7 +47,9 @@ public class UserService {
     	
     	try {
     		myDbUser = userRepo.save(myDbUser);
-    	} catch (Exception e) { 
+    	} catch (CannotCreateTransactionException ex) {
+			throw new CannotCreateTransactionException("DB connection not avaiable...");
+		} catch (Exception e) { 
     		log.error("saveUser MyDbException : " + e.getMessage());
     		throw new MyDbException("saveUser : MyDbException"); //don't show user database structure...
     	}
@@ -61,7 +66,7 @@ public class UserService {
 	 * @throws MyDbException
 	 * @throws MyWebInfoException
 	 */
-	public MyDbUser findByEmail(String email) throws MyNotFoundException {
+	public MyDbUser findByEmail(String email) throws DataAccessResourceFailureException,MyNotFoundException {
 		
 		//email checking... not necessary : done at the entry of user by email annotation in the model
 		
@@ -69,6 +74,8 @@ public class UserService {
 		
 		try {
 			retour = userRepo.findByEmail(email);
+		} catch (DataAccessResourceFailureException ex) {
+			throw new DataAccessResourceFailureException("DB connection not avaiable.");
 		} catch (Exception e) {
 			log.error("user " + email + " not found " + e.getMessage() + " " + e.toString());
 			throw new MyNotFoundException("user " + email + " not found");
@@ -86,11 +93,13 @@ public class UserService {
 	 * @param id
 	 * @return the MyDbUser object
 	 */
-	public MyDbUser getById(Integer id) throws MyNotFoundException {
+	public MyDbUser getById(Integer id) throws CannotCreateTransactionException, MyNotFoundException {
 		
 		MyDbUser retour = null;
 		try {
 			retour = userRepo.getById(id);
+		} catch (CannotCreateTransactionException ex) {
+			throw new CannotCreateTransactionException("DB connection not avaiable...");
 		} catch (Exception e) {
 			log.error("user " + id.toString() + " not found " + e.getMessage() + " " + e.toString());
 			throw new MyNotFoundException("user " + id + " not found");

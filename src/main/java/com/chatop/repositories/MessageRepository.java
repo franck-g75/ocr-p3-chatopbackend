@@ -5,6 +5,9 @@ import org.springframework.stereotype.Repository;
 
 import com.chatop.model.Message;
 
+/**
+ * MessageRepository
+ */
 @Repository
 public interface MessageRepository extends JpaRepository<Message,Integer>{
 

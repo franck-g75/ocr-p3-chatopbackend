@@ -4,14 +4,17 @@ import java.text.SimpleDateFormat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "MessageDto Model")
-public class MessageDto {
+/**
+ * DTO to add a message
+ */
+@Schema(description = "AddMessageDto Model")
+public class AddMessageDto {
 
 	private Integer rental_id;
 	private Integer user_id;
 	private String message;
 	
-	public MessageDto() {}
+	public AddMessageDto() {}
 	
 	public Integer getRental_id() {
 		return rental_id;

@@ -2,7 +2,7 @@ package com.chatop.model;
 
 import java.sql.Timestamp;
 
-import com.chatop.model.dto.MessageDto;
+import com.chatop.model.dto.AddMessageDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +12,10 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
+
+/**
+ * Entity object Message
+ */
 @Entity @Table(name="messages")
 public class Message {
 
@@ -96,8 +100,8 @@ public class Message {
 	 * 
 	 * @return
 	 */
-	public MessageDto toDto() {
-		MessageDto retour = new MessageDto();
+	public AddMessageDto toDto() {
+		AddMessageDto retour = new AddMessageDto();
 		retour.setMessage(message);
 		retour.setUser_id(user.getId());
 		retour.setRental_id(rental.getId());
