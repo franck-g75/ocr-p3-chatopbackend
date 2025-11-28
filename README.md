@@ -41,12 +41,16 @@ Je suppose que ces logiciels sont installés et configuré.
 
 * Télécharger le projet à cette adresse : [https://github.com/franck-g75/ocr-p3-chatopbackend](https://github.com/franck-g75/ocr-p3-chatopbackend)
 * Le coller dans le répertoire back-end
+* Dans eclipse cliquer sur menu `fichier` puis sur le sous menu `Import` 
+* Chercher, trouver et cliquer sur `Existing maven project` puis sur `next`
+* Sélectionner la racine du projet (Répertoire back end) (voir le fichier pom.xml qui s'afiche 
+* cliquer sur Finish
 
 ##### Pour la base de données
 
 * Créer une base de donnée nommée **chatop** avec les paramètres UTF-8-general-ci
 * Noter le nom de la nouvelle base (chatop) ainsi que le login et mot de passe pour paramétrage ultérieur.
-* Exécuter le code SQL situé dans le fichier `src/main/resources/sql/script.sql` dans la base nouvellement créée
+* Exécuter le code SQL situé dans le fichier [Front-end]`src/main/resources/sql/script.sql` dans la base nouvellement créée
 
 ##### Génération des cles privées et publiques
 
@@ -61,7 +65,20 @@ Utilisez l'outil git en ligne de commande : **GIT CMD** qui continent MINGW64 qu
 
 		`openssl req -new -x509 -key chatop_private_key.pk -out chatop_certificate.pem -days 365`
 
-Les clés privées et publiques sont dans le répertoire de base du fichier de paramétrage.
+Répondre aux questions posées :
+	```
+	
+	Country Name (2 letter code) [AU]:FR
+	State or Province Name (full name) [Some-State]:Ile de france
+	Locality Name (eg, city) []:Paris
+	Organization Name (eg, company) [Internet Widgits Pty Ltd]:chatop
+	Organizational Unit Name (eg, section) []:
+	Common Name (e.g. server FQDN or YOUR name) []:fg
+	Email Address []:franck.guindeuil@gmail.com
+	
+	```
+
+Les clés privées et publiques sont maintenant dans le répertoire de base du fichier de paramétrage.
 
 ##### paramétrage  `src/main/resource/application.properties`
 
